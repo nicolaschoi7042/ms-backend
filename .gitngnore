@@ -16,6 +16,9 @@ dist/
 build/
 out/
 
+# pnpm store directory
+.pnpm-store
+
 # IDEs and editors
 .vscode/
 .idea/
