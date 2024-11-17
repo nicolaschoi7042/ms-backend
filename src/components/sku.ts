@@ -1,0 +1,21 @@
+export interface Data {
+  TOT_KG_WT: string | null;
+  ITEM_QTY: string | null;
+  RTN_MSG: string | null;
+  ITEM_NM: string | null;
+  RTN_CD: string | null;
+  VOL_KG_WT: string | null;
+  CRT_WT: string | null;
+  HAWB_NO: string | null;
+  REAL_WT: string | null;
+  DPTR_APORT_NM: string | null;
+  DPTR_APORT_CD: string | null;
+  SOUND_NO: string | null;
+  DEST_APORT_NM: string | null;
+  BOX_NO: string | null;
+  SHPR_NM: string | null;
+  DEST_APORT_CD: string | null;
+  CNEE_NM: string | null;
+  ORD_WNO: string | null;
+  LASTMILE: string | null;
+}

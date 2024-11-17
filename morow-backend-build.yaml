@@ -1,0 +1,22 @@
+version: 'x.x'  
+
+services:
+  # Morow-backend service
+  backend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile  
+      args:
+        WORKDIR: /roboe/app
+        HUB_REPO: roboetech
+        VER: x.x.x
+        UNAME: roboe
+        HOME: /roboe/app
+    image: morow-backend-img
+    container_name: morow-backend-conatainer
+    ports:
+      - "8000:8000"
+      - "5555:5555"
+    environment:
+      - NODE_ENV=production
+    network_mode: "host"  # Use host networking

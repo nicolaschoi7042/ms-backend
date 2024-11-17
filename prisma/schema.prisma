@@ -1,0 +1,279 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model PalletSpecification {
+  id         String   @id @default(uuid())
+  name       String   @unique
+  width      Float
+  length     Float
+  height     Float
+  pallets    Pallet[]
+  Robot      Robot    @relation(fields: [robotId], references: [id])
+  robotId    Int
+  overhang   Int      @default(0)
+  isEditable Boolean  @default(true) @map("is_editable")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("pallet_specifications")
+}
+
+model Pallet {
+  id                    String               @id @default(uuid())
+  isBuffer              Boolean              @default(false) @map("is_buffer")
+  isUse                 Boolean              @default(false) @map("is_use")
+  isError               Boolean              @default(false) @map("is_error")
+  location              String
+  isInvoiceVisible      Boolean              @default(false) @map("is_invoice_visible")
+  loadingHeight         Float                @default(0) @map("loading_height")
+  orderInformation      String?              @map("order_information")
+  loadingPatternId      Int?                 @map("loading_pattern_id")
+  loadingPattern        LoadingPattern?      @relation(fields: [loadingPatternId], references: [id])
+  boxGroupId            Int?                 @map("box_group_id")
+  boxGroup              BoxGroup?            @relation(fields: [boxGroupId], references: [id])
+  palletSpecificationId String?
+  palletSpecification   PalletSpecification? @relation(fields: [palletSpecificationId], references: [id], onDelete: Cascade)
+  palletGroupId         Int
+  palletGroup           PalletGroup          @relation(fields: [palletGroupId], references: [id], onDelete: Cascade)
+  createdAt             DateTime             @default(now()) @map("created_at")
+  updatedAt             DateTime             @default(now()) @updatedAt @map("updated_at")
+
+  @@map("pallets")
+}
+
+model JobGroup {
+  id        Int      @id @default(autoincrement())
+  name      String
+  location  String?
+  enableConcurrent  Boolean @default(false) @map("enable_concurrent")
+  jobs      Job[]
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("job_pallet_groups")
+}
+
+model PalletGroup {
+  id        Int      @id @default(autoincrement())
+  name      String
+  location  String?
+  pallets   Pallet[]
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("pallet_groups")
+}
+
+model Box {
+  id             String       @id @default(uuid())
+  name           String
+  width          Float
+  height         Float
+  length         Float
+  weight         Int
+  labelDirection Int?         @map("label_direction")
+  boxGroupId     Int
+  boxGroup       BoxGroup     @relation(fields: [boxGroupId], references: [id], onDelete: Cascade)
+  barcodeTypeId  Int?         @map("barcode_type_id")
+  barcodeType    BarcodeType? @relation(fields: [barcodeTypeId], references: [id])
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @default(now()) @updatedAt @map("updated_at")
+
+  @@map("boxes")
+}
+
+model Job {
+  id                Int           @id @default(autoincrement())
+  robotId           Int
+  loadingRate       Float         @default(0) @map("loading_rate")
+  bph               Float         @default(0) @map("bph")
+  currentLoadHeight Float         @default(0) @map("current_load_height")
+  endFlag           Boolean       @default(false) @map("end_flag")
+  robot             Robot         @relation(fields: [robotId], references: [id])
+  jobPallet         JobPallet?
+  boxPositions      BoxPosition[]
+  jobBoxes          String        @default("") @map("job_boxes")
+  startedAt         DateTime?     @map("started_at")
+  endedAt           DateTime?     @map("ended_at")
+  createdAt         DateTime      @default(now()) @map("created_at")
+  updatedAt         DateTime      @default(now()) @updatedAt @map("updated_at")
+  JobGroup          JobGroup      @relation(fields: [jobGroupId], references: [id])
+  jobGroupId        Int
+
+  @@map("jobs")
+}
+
+model BoxPosition {
+  id           Int      @id @default(autoincrement())
+  jobId        Int
+  x            Float
+  y            Float
+  z            Float
+  width        Float
+  height       Float
+  length       Float
+  boxName      String
+  boxBarcode   String
+  loadingOrder Float
+  isLoading    Boolean
+  rotationType Int?     @map("rotation_type")
+  boxId        String?  @map("box_id")
+  job          Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("box_positions")
+}
+
+model Log {
+  id          Int      @id @default(autoincrement())
+  level       Int
+  category    Int
+  message_key Int
+  param       String? // Prisma does not support JSON fields in SQLite
+  checked     Boolean? @default(false)
+  Robot       Robot    @relation(fields: [robotId], references: [id])
+  robotId     Int
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("logs")
+}
+
+model Robot {
+  id                   Int                   @id @default(autoincrement())
+  project              String                @default("")
+  application          String                @default("")
+  eventAlarmCode       Int                   @default(0) @map("event_alarm_code")
+  status               Int                   @default(1)
+  isCameraCalibration  Int                   @default(-1) @map("is_camera_calibration")
+  isCameraPositionCalibration  Int           @default(-1) @map("is_camera_position_calibration")
+  extConnectionUrl     String                @default("") @map("ext_conn_url")
+  enableExtConnection  Boolean               @default(false) @map("enable_ext_conn")
+  version              String                @default("v0.0.1")
+  morowVersion         String                @default("morow_v0.0.0")
+  visionVersion        String                @default("vision_v0.0.0")
+  dockerVersion        String                @default("docker_v0.0.0")
+  firmwareVersion      String                @default("firmware_v0.0.0")
+  serial               String                @unique
+  platform             String                @default("")
+  connection           Boolean               @default(false)
+  operatingSpeed       Int                   @default(70) @map("operating_speed")
+  robotPosition        Int                   @default(0) @map("robot_position")
+  liftPosition         Int                   @default(0) @map("lift_position")
+  gripperPosition      Int                   @default(0) @map("gripper_position")
+  toolStatus           Boolean               @default(false) @map("tool_status")
+  isUseBarcode         Boolean               @default(false) @map("is_use_barcode")
+  isUseAdminPassword   Boolean               @default(false) @map("is_use_admin_password")
+  config               String                @default("") @map("config")
+  jobs                 Job[]
+  logs                 Log[]
+  palletSpecifications PalletSpecification[]
+  createdAt            DateTime              @default(now()) @map("created_at")
+  updatedAt            DateTime              @default(now()) @updatedAt @map("updated_at")
+
+  @@map("robots")
+}
+
+model BoxGroup {
+  id        Int      @id @default(autoincrement())
+  name      String
+  boxes     Box[]
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+  Pallet    Pallet[]
+
+  @@map("box_groups")
+}
+
+model JobPallet {
+  id                 Int      @id @default(autoincrement())
+  job                Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  jobId              Int      @unique
+  isBuffer           Boolean  @default(false)
+  isUse              Boolean  @default(false) @map("is_use")
+  isError            Boolean  @default(false) @map("is_error")
+  location           String   @default("")
+  isInvoiceVisible   Boolean  @default(false) @map("is_invoice_visible")
+  loadingHeight      Float    @default(0) @map("loading_height")
+  orderInformation   String?  @map("order_information")
+  loadingPatternName String   @default("") @map("loading_pattern_name")
+  width              Float    @default(0)
+  height             Float    @default(0)
+  length             Float    @default(0)
+  palletBarcode      String   @default("")
+  palletSpecName     String   @default("")
+  overhang           Int      @default(0)
+  boxGroupName       String   @default("") @map("box_group_name")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("job_pallets")
+}
+
+model AdminPassword {
+  id          Int      @id @default(autoincrement())
+  robotSerial String   @unique @map("robot_serial")
+  password    String
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("admin_passwords")
+}
+
+model BarcodeType {
+  id                  Int      @id @default(autoincrement())
+  name                String
+  sampleData          String   @map("sample_data")
+  productCodeLocation String   @map("product_code")
+  weightLocation      String
+  unit                String?
+  digits              Int?
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @default(now()) @updatedAt @map("updated_at")
+  boxses              Box[]
+
+  @@map("barcode_types")
+}
+
+model LoadingPattern {
+  id           Int      @id @default(autoincrement())
+  name         String
+  boxGroup     String   @default("") @map("box_group")
+  isSelectable Boolean  @default(true) @map("is_selectable")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at")
+  Pallet       Pallet[]
+
+  @@map("loading_patterns")
+}
+
+model SkuInformation {
+  id                   Int      @id @default(autoincrement())
+  tsk_btch_id          String
+  tsk_id               String
+  ord_no               String
+  inv_no               String   @unique
+  regn_spr_cd          String
+  cst_ord_no           String //@default("")
+  wh_id                String //@default("")
+  is_dg                Int      @default(-1)
+  box_type             String   @default("")
+  wgt_insp_checked     Boolean  @default(false)
+  wgt_insp_recved_at   DateTime @default(now()) @map("wgt_insp_recved_at")
+  sort_insp_checked    Boolean  @default(false)
+  sort_insp_recved_at  DateTime @default(now()) @map("sort_insp_recved_at")
+  order_info_recved    Boolean  @default(false)
+  order_info_recved_at DateTime @default(now()) @map("order_info_recved_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("sku_information")
+}

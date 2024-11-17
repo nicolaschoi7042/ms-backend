@@ -1,0 +1,23 @@
+generator client2 {
+    provider = "prisma-client-js"
+    output   = "./generated/client2"
+}
+
+datasource db {
+    provider = "sqlite"
+    url      = env("DB2_URL")
+}
+
+model SkuInfo2 {
+    id          Int      @id @default(autoincrement())
+    tsk_btch_id String
+    tsk_id      String
+    ord_no      String
+    inv_no      String
+    regn_spr_cd String
+    pallet_no   String
+    chute_id    String
+    createdAt   DateTime @default(now()) @map("created_at")
+
+    @@map("SkuInfo2")
+}

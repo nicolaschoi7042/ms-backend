@@ -1,0 +1,19 @@
+{
+    "name": "Node.js & TypeScript",
+    // Use a Dockerfile for multi-stage build
+    "build": {
+        "dockerfile": "./Dockerfile",
+        "context": ".."
+    },
+    "features": {
+        "ghcr.io/devcontainers-extra/features/bash-command:1": {}
+    },
+
+    // Use 'forwardPorts' to make a list of ports inside the container available locally.
+    // "forwardPorts": [],
+
+    // Use 'postCreateCommand' to run commands after the container is created.
+    "postCreateCommand": "pnpm install",
+
+    // Configure tool-specific properties.
+}
